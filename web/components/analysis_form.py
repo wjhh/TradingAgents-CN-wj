@@ -124,7 +124,7 @@ def render_analysis_form():
         col1, col2 = st.columns(2)
 
         # 获取缓存的分析师选择和市场类型
-        cached_analysts = cached_config.get('selected_analysts', ['market', 'fundamentals']) if cached_config else ['market', 'fundamentals']
+        cached_analysts = cached_config.get('selected_analysts', ['market', 'fundamentals', 'news', 'social', 'policy', 'hot_money', 'lockup']) if cached_config else ['market', 'fundamentals', 'news', 'social', 'policy', 'hot_money', 'lockup']
         cached_market_type = cached_config.get('market_type', 'A股') if cached_config else 'A股'
 
         # 检测市场类型是否发生变化
@@ -180,6 +180,30 @@ def render_analysis_form():
                 help="分析财务数据、公司基本面、估值水平"
             )
 
+        # A股专用分析师：仅在 market_type == "A股" 时显示
+        if market_type == "A股":
+            with col1:
+                policy_analyst = st.checkbox(
+                    "🏛️ 政策分析师",
+                    value='policy' in cached_analysts,
+                    help="分析宏观政策、产业政策、监管环境对股票的影响"
+                )
+                hot_money_analyst = st.checkbox(
+                    "💰 游资追踪师",
+                    value='hot_money' in cached_analysts,
+                    help="追踪龙虎榜、北向资金、主力资金流向"
+                )
+            with col2:
+                lockup_analyst = st.checkbox(
+                    "🔓 解禁监控师",
+                    value='lockup' in cached_analysts,
+                    help="监控限售解禁、大股东减持风险"
+                )
+        else:
+            policy_analyst = False
+            hot_money_analyst = False
+            lockup_analyst = False
+
         # 收集选中的分析师
         selected_analysts = []
         if market_analyst:
@@ -190,6 +214,12 @@ def render_analysis_form():
             selected_analysts.append(("news", "新闻分析师"))
         if fundamentals_analyst:
             selected_analysts.append(("fundamentals", "基本面分析师"))
+        if policy_analyst:
+            selected_analysts.append(("policy", "政策分析师"))
+        if hot_money_analyst:
+            selected_analysts.append(("hot_money", "游资追踪师"))
+        if lockup_analyst:
+            selected_analysts.append(("lockup", "解禁监控师"))
         
         # 显示选择摘要
         if selected_analysts:

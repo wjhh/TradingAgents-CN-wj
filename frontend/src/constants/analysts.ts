@@ -34,6 +34,24 @@ export const ANALYSTS: Analyst[] = [
     name: '社媒分析师',
     description: '分析社交媒体情绪、投资者心理和舆论导向',
     icon: 'ChatDotRound'
+  },
+  {
+    id: 'policy',
+    name: '政策分析师',
+    description: '分析宏观政策、行业政策、监管环境（A股专用）',
+    icon: 'Stamp'
+  },
+  {
+    id: 'hot_money',
+    name: '游资追踪师',
+    description: '追踪龙虎榜、北向资金、主力资金流向（A股专用）',
+    icon: 'Money'
+  },
+  {
+    id: 'lockup',
+    name: '解禁监控师',
+    description: '监控限售股解禁、大股东减持风险（A股专用）',
+    icon: 'Lock'
   }
 ]
 
@@ -63,7 +81,10 @@ export const ANALYST_NAME_TO_ID_MAP: Record<string, string> = {
   '市场分析师': 'market',
   '基本面分析师': 'fundamentals',
   '新闻分析师': 'news',
-  '社媒分析师': 'social'
+  '社媒分析师': 'social',
+  '政策分析师': 'policy',
+  '游资追踪师': 'hot_money',
+  '解禁监控师': 'lockup'
 }
 
 // 将中文分析师名称转换为英文ID

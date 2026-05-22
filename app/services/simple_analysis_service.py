@@ -692,7 +692,7 @@ class SimpleAnalysisService:
         logger.info(f"🔧 创建新的TradingAgents实例（并发安全模式）...")
 
         trading_graph = TradingAgentsGraph(
-            selected_analysts=config.get("selected_analysts", ["market", "fundamentals"]),
+            selected_analysts=config.get("selected_analysts", ["market", "fundamentals", "news", "social", "policy", "hot_money", "lockup"]),
             debug=config.get("debug", False),
             config=config
         )
@@ -877,7 +877,7 @@ class SimpleAnalysisService:
                 logger.info(f"📊 [线程] 创建进度跟踪器: {task_id}")
                 tracker = RedisProgressTracker(
                     task_id=task_id,
-                    analysts=request.parameters.selected_analysts or ["market", "fundamentals"],
+                    analysts=request.parameters.selected_analysts or ["market", "fundamentals", "news", "social", "policy", "hot_money", "lockup"],
                     research_depth=request.parameters.research_depth or "标准",
                     llm_provider="dashscope"
                 )
@@ -1209,7 +1209,7 @@ class SimpleAnalysisService:
             # 创建分析配置（支持混合模式）
             config = create_analysis_config(
                 research_depth=research_depth,
-                selected_analysts=request.parameters.selected_analysts if request.parameters else ["market", "fundamentals"],
+                selected_analysts=request.parameters.selected_analysts if request.parameters else ["market", "fundamentals", "news", "social", "policy", "hot_money", "lockup"],
                 quick_model=quick_model,
                 deep_model=deep_model,
                 llm_provider=quick_provider,  # 主要使用快速模型的供应商
@@ -1277,7 +1277,7 @@ class SimpleAnalysisService:
                         return
 
                     # 分析师阶段 - 根据选择的分析师数量动态调整
-                    analysts = request.parameters.selected_analysts if request.parameters else ["market", "fundamentals"]
+                    analysts = request.parameters.selected_analysts if request.parameters else ["market", "fundamentals", "news", "social", "policy", "hot_money", "lockup"]
 
                     # 模拟分析师执行
                     for i, analyst in enumerate(analysts):

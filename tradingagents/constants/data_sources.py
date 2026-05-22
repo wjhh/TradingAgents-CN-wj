@@ -28,6 +28,7 @@ class DataSourceCode(str, Enum):
     MONGODB = "mongodb"  # MongoDB 数据库缓存（最高优先级）
     
     # ==================== 中国市场数据源 ====================
+    ASTOCK_DIRECT = "astock_direct"  # AStockDirect - 零第三方封装的直连A股数据
     TUSHARE = "tushare"      # Tushare - 专业A股数据
     AKSHARE = "akshare"      # AKShare - 开源金融数据（A股+港股）
     BAOSTOCK = "baostock"    # BaoStock - 免费A股数据
@@ -86,7 +87,22 @@ DATA_SOURCE_REGISTRY: Dict[str, DataSourceInfo] = {
         is_free=True,
         features=["本地缓存", "最快速度", "离线可用"],
     ),
-    
+
+    # AStockDirect
+    DataSourceCode.ASTOCK_DIRECT: DataSourceInfo(
+        code=DataSourceCode.ASTOCK_DIRECT,
+        name="AStockDirect",
+        display_name="A股直连数据",
+        provider="多渠道直连（同花顺/东财/百度股市通/mootdx/腾讯）",
+        description="零第三方封装的A股直连数据，整合同花顺API、东财datacenter、百度股市通、mootdx TCP行情、腾讯行情等信源",
+        supported_markets=["a_shares"],
+        requires_api_key=False,
+        is_free=True,
+        official_website=None,
+        documentation_url=None,
+        features=["实时行情", "龙虎榜", "北向资金", "概念板块", "资金流向", "限售解禁", "F10财务", "涨停板", "K线MA"],
+    ),
+
     # Tushare
     DataSourceCode.TUSHARE: DataSourceInfo(
         code=DataSourceCode.TUSHARE,

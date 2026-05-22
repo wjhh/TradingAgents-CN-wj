@@ -70,6 +70,16 @@ class AgentState(MessagesState):
     sentiment_tool_call_count: Annotated[int, "Social media analyst tool call counter"]
     fundamentals_tool_call_count: Annotated[int, "Fundamentals analyst tool call counter"]
 
+    # 新增：3个A股特化分析师报告
+    policy_report: Annotated[str, "Report from the Policy Analyst (A-stock specific)"]
+    hot_money_report: Annotated[str, "Report from the Hot Money Tracker (A-stock specific)"]
+    lockup_report: Annotated[str, "Report from the Lockup/Reduction Watcher (A-stock specific)"]
+
+    # 新增：防死循环工具调用计数器
+    policy_tool_call_count: Annotated[int, "Policy analyst tool call counter"]
+    hot_money_tool_call_count: Annotated[int, "Hot money tracker tool call counter"]
+    lockup_tool_call_count: Annotated[int, "Lockup watcher tool call counter"]
+
     # researcher team discussion step
     investment_debate_state: Annotated[
         InvestDebateState, "Current state of the debate on if to invest or not"
@@ -83,3 +93,6 @@ class AgentState(MessagesState):
         RiskDebateState, "Current state of the debate on evaluating risk"
     ]
     final_trade_decision: Annotated[str, "Final decision made by the Risk Analysts"]
+
+    # 数据质量门控
+    data_quality_summary: Annotated[str, "Data quality gate review summary"]

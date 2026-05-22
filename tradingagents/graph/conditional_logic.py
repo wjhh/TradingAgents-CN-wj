@@ -240,3 +240,91 @@ class ConditionalLogic:
 
         logger.info(f"🔄 [风险讨论控制] 继续讨论 -> {next_speaker}")
         return next_speaker
+
+    # ================================================================
+    # 新增：A股专用分析师条件判断
+    # ================================================================
+
+    def should_continue_policy(self, state: AgentState):
+        """Determine if policy analysis should continue."""
+        from tradingagents.utils.logging_init import get_logger
+        logger = get_logger("agents")
+
+        messages = state["messages"]
+        last_message = messages[-1]
+        tool_call_count = state.get("policy_tool_call_count", 0)
+        max_tool_calls = 3
+        policy_report = state.get("policy_report", "")
+
+        logger.info(f"🔀 [条件判断] should_continue_policy")
+        logger.info(f"🔀 [条件判断] - 消息数量: {len(messages)}")
+        logger.info(f"🔀 [条件判断] - 报告长度: {len(policy_report)}")
+        logger.info(f"🔧 [死循环修复] - 工具调用次数: {tool_call_count}/{max_tool_calls}")
+
+        if tool_call_count >= max_tool_calls:
+            logger.warning(f"🔧 [死循环修复] 达到最大工具调用次数，强制结束: Msg Clear Policy")
+            return "Msg Clear Policy"
+        if policy_report and len(policy_report) > 100:
+            logger.info(f"🔀 [条件判断] ✅ 报告已完成，返回: Msg Clear Policy")
+            return "Msg Clear Policy"
+        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+            logger.info(f"🔀 [条件判断] 🔧 检测到tool_calls，返回: tools_policy")
+            return "tools_policy"
+        logger.info(f"🔀 [条件判断] ✅ 无tool_calls，返回: Msg Clear Policy")
+        return "Msg Clear Policy"
+
+    def should_continue_hot_money(self, state: AgentState):
+        """Determine if hot money tracking should continue."""
+        from tradingagents.utils.logging_init import get_logger
+        logger = get_logger("agents")
+
+        messages = state["messages"]
+        last_message = messages[-1]
+        tool_call_count = state.get("hot_money_tool_call_count", 0)
+        max_tool_calls = 3
+        hot_money_report = state.get("hot_money_report", "")
+
+        logger.info(f"🔀 [条件判断] should_continue_hot_money")
+        logger.info(f"🔀 [条件判断] - 消息数量: {len(messages)}")
+        logger.info(f"🔀 [条件判断] - 报告长度: {len(hot_money_report)}")
+        logger.info(f"🔧 [死循环修复] - 工具调用次数: {tool_call_count}/{max_tool_calls}")
+
+        if tool_call_count >= max_tool_calls:
+            logger.warning(f"🔧 [死循环修复] 达到最大工具调用次数，强制结束: Msg Clear Hot_money")
+            return "Msg Clear Hot_money"
+        if hot_money_report and len(hot_money_report) > 100:
+            logger.info(f"🔀 [条件判断] ✅ 报告已完成，返回: Msg Clear Hot_money")
+            return "Msg Clear Hot_money"
+        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+            logger.info(f"🔀 [条件判断] 🔧 检测到tool_calls，返回: tools_hot_money")
+            return "tools_hot_money"
+        logger.info(f"🔀 [条件判断] ✅ 无tool_calls，返回: Msg Clear Hot_money")
+        return "Msg Clear Hot_money"
+
+    def should_continue_lockup(self, state: AgentState):
+        """Determine if lockup watching should continue."""
+        from tradingagents.utils.logging_init import get_logger
+        logger = get_logger("agents")
+
+        messages = state["messages"]
+        last_message = messages[-1]
+        tool_call_count = state.get("lockup_tool_call_count", 0)
+        max_tool_calls = 3
+        lockup_report = state.get("lockup_report", "")
+
+        logger.info(f"🔀 [条件判断] should_continue_lockup")
+        logger.info(f"🔀 [条件判断] - 消息数量: {len(messages)}")
+        logger.info(f"🔀 [条件判断] - 报告长度: {len(lockup_report)}")
+        logger.info(f"🔧 [死循环修复] - 工具调用次数: {tool_call_count}/{max_tool_calls}")
+
+        if tool_call_count >= max_tool_calls:
+            logger.warning(f"🔧 [死循环修复] 达到最大工具调用次数，强制结束: Msg Clear Lockup")
+            return "Msg Clear Lockup"
+        if lockup_report and len(lockup_report) > 100:
+            logger.info(f"🔀 [条件判断] ✅ 报告已完成，返回: Msg Clear Lockup")
+            return "Msg Clear Lockup"
+        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+            logger.info(f"🔀 [条件判断] 🔧 检测到tool_calls，返回: tools_lockup")
+            return "tools_lockup"
+        logger.info(f"🔀 [条件判断] ✅ 无tool_calls，返回: Msg Clear Lockup")
+        return "Msg Clear Lockup"

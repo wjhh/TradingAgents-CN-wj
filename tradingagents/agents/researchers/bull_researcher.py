@@ -20,6 +20,9 @@ def create_bull_researcher(llm, memory):
         sentiment_report = state["sentiment_report"]
         news_report = state["news_report"]
         fundamentals_report = state["fundamentals_report"]
+        policy_report = state.get("policy_report", "")
+        hot_money_report = state.get("hot_money_report", "")
+        lockup_report = state.get("lockup_report", "")
 
         # 使用统一的股票类型检测
         ticker = state.get('company_of_interest', 'Unknown')
@@ -84,7 +87,7 @@ def create_bull_researcher(llm, memory):
         logger.debug(f"🐂 [DEBUG] - 股票代码: {ticker}, 公司名称: {company_name}, 类型: {market_info['market_name']}, 货币: {currency}")
         logger.debug(f"🐂 [DEBUG] - 市场详情: 中国A股={is_china}, 港股={is_hk}, 美股={is_us}")
 
-        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
+        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}\n\n{policy_report}\n\n{hot_money_report}\n\n{lockup_report}"
 
         # 安全检查：确保memory不为None
         if memory is not None:
@@ -116,6 +119,9 @@ def create_bull_researcher(llm, memory):
 社交媒体情绪报告：{sentiment_report}
 最新世界事务新闻：{news_report}
 公司基本面报告：{fundamentals_report}
+政策分析报告：{policy_report}
+游资追踪报告：{hot_money_report}
+解禁监控报告：{lockup_report}
 辩论对话历史：{history}
 最后的看跌论点：{current_response}
 类似情况的反思和经验教训：{past_memory_str}

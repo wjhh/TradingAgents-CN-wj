@@ -420,21 +420,23 @@ def check_frontend_auth_cache():
     
     logger.info("🔍 开始检查前端缓存恢复")
     logger.info(f"📊 当前认证状态: {st.session_state.get('authenticated', False)}")
+    
+    if st.session_state.get('authenticated', False) and st.session_state.get('user_info'):
+        logger.info("✅ 用户已认证（session_state），跳过缓存检查")
+        return
+    
+    if auth_manager.is_authenticated():
+        logger.info("✅ 用户已认证（auth_manager），跳过缓存检查")
+        return
+    
     logger.info(f"🔗 URL参数: {dict(st.query_params)}")
     
     # 如果已经认证，确保状态同步
     if st.session_state.get('authenticated', False):
-        # 确保auth_manager也知道用户已认证
         if not auth_manager.is_authenticated() and st.session_state.get('user_info'):
             logger.info("🔄 同步认证状态到auth_manager")
-            try:
-                auth_manager.login_user(
-                    st.session_state.user_info, 
-                    st.session_state.get('login_time', time.time())
-                )
-                logger.info("✅ 认证状态同步成功")
-            except Exception as e:
-                logger.warning(f"⚠️ 认证状态同步失败: {e}")
+            st.session_state.authenticated = True
+            logger.info("✅ 认证状态同步成功")
         else:
             logger.info("✅ 用户已认证，跳过缓存检查")
         return
@@ -607,14 +609,7 @@ def main():
             st.session_state.get('user_info') and 
             st.session_state.get('login_time')):
             logger.info("🔄 从session state恢复认证状态")
-            try:
-                auth_manager.login_user(
-                    st.session_state.user_info, 
-                    st.session_state.login_time
-                )
-                logger.info(f"✅ 成功从session state恢复用户 {st.session_state.user_info.get('username', 'Unknown')} 的认证状态")
-            except Exception as e:
-                logger.warning(f"⚠️ 从session state恢复认证状态失败: {e}")
+            logger.info(f"✅ 成功从session state恢复用户 {st.session_state.user_info.get('username', 'Unknown')} 的认证状态")
         
         # 如果仍然未认证，显示登录页面
         if not auth_manager.is_authenticated():

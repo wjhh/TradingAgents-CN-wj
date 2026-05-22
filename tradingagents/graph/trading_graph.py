@@ -193,7 +193,7 @@ class TradingAgentsGraph:
 
     def __init__(
         self,
-        selected_analysts=["market", "social", "news", "fundamentals"],
+        selected_analysts=["market", "social", "news", "fundamentals", "policy", "hot_money", "lockup"],
         debug=False,
         config: Dict[str, Any] = None,
     ):
@@ -528,8 +528,20 @@ class TradingAgentsGraph:
             )
 
             logger.info(f"✅ [自定义厂家 {provider_name}] 已配置自定义端点并应用用户配置的模型参数")
-        
-        self.toolkit = Toolkit(config=self.config)
+
+        # Initialize AStockDirectProvider (before Toolkit — dependency injection)
+        try:
+            from tradingagents.dataflows.providers.china.astock_direct import AStockDirectProvider
+            self.astock_provider = AStockDirectProvider(
+                config=self.config.get("astock_config", {}),
+                mongodb_cache=getattr(self, 'cache_manager', None),
+            )
+            logger.info("✅ [AStockDirectProvider] 初始化成功")
+        except Exception as e:
+            logger.warning(f"⚠️ [AStockDirectProvider] 初始化失败，A股专用工具将不可用: {e}")
+            self.astock_provider = None
+
+        self.toolkit = Toolkit(config=self.config, astock_provider=self.astock_provider)
 
         # Initialize memories (如果启用)
         memory_enabled = self.config.get("memory_enabled", True)
@@ -586,7 +598,31 @@ class TradingAgentsGraph:
         self.log_states_dict = {}  # date to full state dict
 
         # Set up the graph
-        self.graph = self.graph_setup.setup_graph(selected_analysts)
+        resolved_analysts = self._resolve_selected_analysts(selected_analysts, self.config)
+        quality_gate_enabled = self.config.get("quality_gate_enabled", False)
+        self.graph = self.graph_setup.setup_graph(resolved_analysts, quality_gate_enabled=quality_gate_enabled)
+
+    @staticmethod
+    def _resolve_selected_analysts(selected_analysts: list, config: dict = None) -> list:
+        """Filter out A-stock-only analysts for non-A-share markets.
+
+        When analyzing HK/US stocks, the 3 A-stock-exclusive analysts
+        (policy, hot_money, lockup) would only produce placeholder reports
+        and waste 2-4 minutes of LLM calls. This guard removes them early.
+        """
+        a_stock_only = {"policy", "hot_money", "lockup"}
+        config = config or {}
+        market_type = config.get("market_type", "A股")
+        is_a_stock = market_type in ("A股", "中国", "China", "a_stock")
+        if not is_a_stock:
+            filtered = [a for a in selected_analysts if a not in a_stock_only]
+            removed = [a for a in selected_analysts if a in a_stock_only]
+            if removed:
+                logger.warning(
+                    f"⚠️ 非A股市场(market_type={market_type})，自动排除A股专用分析师: {removed}"
+                )
+            return filtered
+        return selected_analysts
 
     def _create_tool_nodes(self) -> Dict[str, ToolNode]:
         """Create tool nodes for different data sources.
@@ -642,6 +678,34 @@ class TradingAgentsGraph:
                     # 中国市场工具（备用）
                     self.toolkit.get_china_stock_data,
                     self.toolkit.get_china_fundamentals,
+                ]
+            ),
+            "policy": ToolNode(
+                [
+                    self.toolkit.get_stock_news_unified,
+                    self.toolkit.get_global_news_openai,
+                ]
+            ),
+            "hot_money": ToolNode(
+                [
+                    self.toolkit.get_stock_market_data_unified,
+                    self.toolkit.get_stock_news_unified,
+                    self.toolkit.get_stock_fundamentals_unified,
+                    self.toolkit.get_insider_transactions_astock,
+                    self.toolkit.get_hot_stocks,
+                    self.toolkit.get_northbound_flow,
+                    self.toolkit.get_concept_blocks,
+                    self.toolkit.get_fund_flow,
+                    self.toolkit.get_dragon_tiger_board,
+                    self.toolkit.get_industry_comparison,
+                ]
+            ),
+            "lockup": ToolNode(
+                [
+                    self.toolkit.get_insider_transactions_astock,
+                    self.toolkit.get_stock_news_unified,
+                    self.toolkit.get_stock_fundamentals_unified,
+                    self.toolkit.get_lockup_expiry,
                 ]
             ),
         }
@@ -885,6 +949,9 @@ class TradingAgentsGraph:
                 'Msg Clear Fundamentals': None,
                 'Msg Clear News': None,
                 'Msg Clear Social': None,
+                'Msg Clear Policy': None,
+                'Msg Clear Hot_money': None,
+                'Msg Clear Lockup': None,
                 # 研究员节点
                 'Bull Researcher': "🐂 看涨研究员",
                 'Bear Researcher': "🐻 看跌研究员",
@@ -896,7 +963,20 @@ class TradingAgentsGraph:
                 'Safe Analyst': "🛡️ 保守风险评估",
                 'Neutral Analyst': "⚖️ 中性风险评估",
                 'Risk Judge': "🎯 风险经理",
+                # 质量门控
+                'Quality Gate': "🔍 数据质量审查",
             }
+
+            # 新增A股专用分析师
+            new_analyst_map = {
+                'Policy Analyst': "🏛️ 政策分析师",
+                'tools_policy': None,
+                'Hot_money Analyst': "💰 游资追踪师",
+                'tools_hot_money': None,
+                'Lockup Analyst': "🔓 解禁监控师",
+                'tools_lockup': None,
+            }
+            node_mapping.update(new_analyst_map)
 
             # 查找映射的消息
             message = node_mapping.get(node_name)
@@ -1118,6 +1198,9 @@ class TradingAgentsGraph:
             "sentiment_report": final_state["sentiment_report"],
             "news_report": final_state["news_report"],
             "fundamentals_report": final_state["fundamentals_report"],
+            "policy_report": final_state.get("policy_report", ""),
+            "hot_money_report": final_state.get("hot_money_report", ""),
+            "lockup_report": final_state.get("lockup_report", ""),
             "investment_debate_state": {
                 "bull_history": final_state["investment_debate_state"]["bull_history"],
                 "bear_history": final_state["investment_debate_state"]["bear_history"],
@@ -1139,6 +1222,7 @@ class TradingAgentsGraph:
             },
             "investment_plan": final_state["investment_plan"],
             "final_trade_decision": final_state["final_trade_decision"],
+            "data_quality_summary": final_state.get("data_quality_summary", ""),
         }
 
         # Save to file

@@ -19,6 +19,10 @@ from tradingagents.agents import (
     create_safe_debator,
     create_social_media_analyst,
     create_trader,
+    create_policy_analyst,
+    create_hot_money_tracker,
+    create_lockup_watcher,
+    create_quality_gate,
 )
 from tradingagents.agents.utils.agent_states import AgentState
 from tradingagents.agents.utils.agent_utils import Toolkit
@@ -63,7 +67,8 @@ class GraphSetup:
         self.react_llm = react_llm
 
     def setup_graph(
-        self, selected_analysts=["market", "social", "news", "fundamentals"]
+        self, selected_analysts=["market", "social", "news", "fundamentals", "policy", "hot_money", "lockup"],
+        quality_gate_enabled=False,
     ):
         """Set up and compile the agent workflow graph.
 
@@ -150,6 +155,27 @@ class GraphSetup:
             delete_nodes["fundamentals"] = create_msg_delete()
             tool_nodes["fundamentals"] = self.tool_nodes["fundamentals"]
 
+        if "policy" in selected_analysts:
+            analyst_nodes["policy"] = create_policy_analyst(
+                self.quick_thinking_llm, self.toolkit
+            )
+            delete_nodes["policy"] = create_msg_delete()
+            tool_nodes["policy"] = self.tool_nodes["policy"]
+
+        if "hot_money" in selected_analysts:
+            analyst_nodes["hot_money"] = create_hot_money_tracker(
+                self.quick_thinking_llm, self.toolkit
+            )
+            delete_nodes["hot_money"] = create_msg_delete()
+            tool_nodes["hot_money"] = self.tool_nodes["hot_money"]
+
+        if "lockup" in selected_analysts:
+            analyst_nodes["lockup"] = create_lockup_watcher(
+                self.quick_thinking_llm, self.toolkit
+            )
+            delete_nodes["lockup"] = create_msg_delete()
+            tool_nodes["lockup"] = self.tool_nodes["lockup"]
+
         # Create researcher and manager nodes
         bull_researcher_node = create_bull_researcher(
             self.quick_thinking_llm, self.bull_memory
@@ -191,6 +217,11 @@ class GraphSetup:
         workflow.add_node("Safe Analyst", safe_analyst)
         workflow.add_node("Risk Judge", risk_manager_node)
 
+        # Add quality gate node (optional, sits between last analyst and Bull Researcher)
+        if quality_gate_enabled:
+            quality_gate_node = create_quality_gate(self.quick_thinking_llm)
+            workflow.add_node("Quality Gate", quality_gate_node)
+
         # Define edges
         # Start with the first analyst
         first_analyst = selected_analysts[0]
@@ -210,12 +241,16 @@ class GraphSetup:
             )
             workflow.add_edge(current_tools, current_analyst)
 
-            # Connect to next analyst or to Bull Researcher if this is the last analyst
+            # Connect to next analyst or to Quality Gate / Bull Researcher if this is the last analyst
             if i < len(selected_analysts) - 1:
                 next_analyst = f"{selected_analysts[i+1].capitalize()} Analyst"
                 workflow.add_edge(current_clear, next_analyst)
             else:
-                workflow.add_edge(current_clear, "Bull Researcher")
+                if quality_gate_enabled:
+                    workflow.add_edge(current_clear, "Quality Gate")
+                    workflow.add_edge("Quality Gate", "Bull Researcher")
+                else:
+                    workflow.add_edge(current_clear, "Bull Researcher")
 
         # Add remaining edges
         workflow.add_conditional_edges(

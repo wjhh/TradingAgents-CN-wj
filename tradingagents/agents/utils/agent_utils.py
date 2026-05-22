@@ -41,6 +41,7 @@ def create_msg_delete():
 
 class Toolkit:
     _config = DEFAULT_CONFIG.copy()
+    _astock_provider = None  # Class-level A-stock provider for static @tool methods
 
     @classmethod
     def update_config(cls, config):
@@ -52,9 +53,11 @@ class Toolkit:
         """Access the configuration."""
         return self._config
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, astock_provider=None):
         if config:
             self.update_config(config)
+        if astock_provider is not None:
+            Toolkit._astock_provider = astock_provider
 
     @staticmethod
     @tool
@@ -1377,3 +1380,183 @@ class Toolkit:
             error_msg = f"统一情绪分析工具执行失败: {str(e)}"
             logger.error(f"❌ [统一情绪工具] {error_msg}")
             return error_msg
+
+    # ===================================================================
+    # 新增：A股专用工具（8个，仅 astock_direct 数据源）
+    # ===================================================================
+
+    @tool
+    @log_tool_call(tool_name="get_insider_transactions_astock", log_args=True)
+    def get_insider_transactions_astock(
+        ticker: Annotated[str, "A股股票代码（6位数字，如 000858）"]
+    ) -> str:
+        """获取A股股东/内部人交易记录和研究数据（mootdx F10）。
+
+        Args:
+            ticker: A股股票代码
+
+        Returns:
+            股东研究数据文本（包括股东变化、持股比例等）
+        """
+        try:
+            provider = Toolkit._astock_provider
+            if provider is None:
+                return "此工具仅适用于 A 股市场，当前分析任务未配置 A 股数据源"
+            return provider.get_insider_transactions(ticker)
+        except Exception as e:
+            return f"A股股东交易数据获取失败: {str(e)}"
+
+    @tool
+    @log_tool_call(tool_name="get_hot_stocks", log_args=True)
+    def get_hot_stocks(
+        curr_date: Annotated[str, "当前日期，格式：YYYY-MM-DD"]
+    ) -> str:
+        """获取当日涨停股及题材归因（同花顺编辑部人工标注的涨停原因）。
+
+        Args:
+            curr_date: 当前日期
+
+        Returns:
+            涨停股票列表，含题材标签和主题频次统计
+        """
+        try:
+            provider = Toolkit._astock_provider
+            if provider is None:
+                return "此工具仅适用于 A 股市场，当前分析任务未配置 A 股数据源"
+            return provider.get_hot_stocks(curr_date)
+        except Exception as e:
+            return f"热门股票数据获取失败: {str(e)}"
+
+    @tool
+    @log_tool_call(tool_name="get_northbound_flow", log_args=True)
+    def get_northbound_flow(
+        curr_date: Annotated[str, "当前日期，格式：YYYY-MM-DD"]
+    ) -> str:
+        """获取北向资金（沪深股通）分钟级实时流向数据（同花顺 hsgtApi）。
+
+        Args:
+            curr_date: 当前日期
+
+        Returns:
+            北向资金流向数据：沪股通+深股通累计净买入、最近10个分钟级数据点
+        """
+        try:
+            provider = Toolkit._astock_provider
+            if provider is None:
+                return "此工具仅适用于 A 股市场，当前分析任务未配置 A 股数据源"
+            return provider.get_northbound_flow(curr_date)
+        except Exception as e:
+            return f"北向资金数据获取失败: {str(e)}"
+
+    @tool
+    @log_tool_call(tool_name="get_concept_blocks", log_args=True)
+    def get_concept_blocks(
+        ticker: Annotated[str, "A股股票代码（6位数字）"]
+    ) -> str:
+        """获取个股所属概念板块/行业分类/地域分类（百度股市通）。
+
+        Args:
+            ticker: A股股票代码
+
+        Returns:
+            概念板块、行业（申万）、地域分类及当日涨幅
+        """
+        try:
+            provider = Toolkit._astock_provider
+            if provider is None:
+                return "此工具仅适用于 A 股市场，当前分析任务未配置 A 股数据源"
+            return provider.get_concept_blocks(ticker)
+        except Exception as e:
+            return f"概念板块数据获取失败: {str(e)}"
+
+    @tool
+    @log_tool_call(tool_name="get_fund_flow", log_args=True)
+    def get_fund_flow(
+        ticker: Annotated[str, "A股股票代码（6位数字）"],
+        curr_date: Annotated[str, "当前日期，格式：YYYY-MM-DD"]
+    ) -> str:
+        """获取个股主力/散户资金流向（百度股市通，分钟级实时+20日历史）。
+
+        Args:
+            ticker: A股股票代码
+            curr_date: 当前日期
+
+        Returns:
+            主力/散户资金流向：超大单/大单/中单/小单净流入
+        """
+        try:
+            provider = Toolkit._astock_provider
+            if provider is None:
+                return "此工具仅适用于 A 股市场，当前分析任务未配置 A 股数据源"
+            return provider.get_fund_flow(ticker, curr_date)
+        except Exception as e:
+            return f"资金流向数据获取失败: {str(e)}"
+
+    @tool
+    @log_tool_call(tool_name="get_dragon_tiger_board", log_args=True)
+    def get_dragon_tiger_board(
+        ticker: Annotated[str, "A股股票代码（6位数字）"],
+        curr_date: Annotated[str, "当前日期，格式：YYYY-MM-DD"]
+    ) -> str:
+        """获取龙虎榜上榜记录、买卖席位明细（营业部）、机构参与情况（东财 datacenter）。
+
+        Args:
+            ticker: A股股票代码
+            curr_date: 当前日期
+
+        Returns:
+            龙虎榜数据：上榜记录、买入/卖出席位TOP5、机构动向
+        """
+        try:
+            provider = Toolkit._astock_provider
+            if provider is None:
+                return "此工具仅适用于 A 股市场，当前分析任务未配置 A 股数据源"
+            return provider.get_dragon_tiger_board(ticker, curr_date)
+        except Exception as e:
+            return f"龙虎榜数据获取失败: {str(e)}"
+
+    @tool
+    @log_tool_call(tool_name="get_lockup_expiry", log_args=True)
+    def get_lockup_expiry(
+        ticker: Annotated[str, "A股股票代码（6位数字）"],
+        curr_date: Annotated[str, "当前日期，格式：YYYY-MM-DD"]
+    ) -> str:
+        """获取限售解禁日历（东财 datacenter，历史解禁记录+未来90天待解禁计划）。
+
+        Args:
+            ticker: A股股票代码
+            curr_date: 当前日期
+
+        Returns:
+            解禁日历：历史解禁记录、未来待解禁计划（含解禁数量/占比）
+        """
+        try:
+            provider = Toolkit._astock_provider
+            if provider is None:
+                return "此工具仅适用于 A 股市场，当前分析任务未配置 A 股数据源"
+            return provider.get_lockup_expiry(ticker, curr_date)
+        except Exception as e:
+            return f"解禁日历数据获取失败: {str(e)}"
+
+    @tool
+    @log_tool_call(tool_name="get_industry_comparison", log_args=True)
+    def get_industry_comparison(
+        ticker: Annotated[str, "A股股票代码（6位数字）"],
+        curr_date: Annotated[str, "当前日期，格式：YYYY-MM-DD"]
+    ) -> str:
+        """获取行业横向对比排名（东财 push2，90个行业板块涨跌幅/成交额排名）。
+
+        Args:
+            ticker: A股股票代码
+            curr_date: 当前日期
+
+        Returns:
+            行业板块排名数据
+        """
+        try:
+            provider = Toolkit._astock_provider
+            if provider is None:
+                return "此工具仅适用于 A 股市场，当前分析任务未配置 A 股数据源"
+            return provider.get_industry_comparison(ticker, curr_date)
+        except Exception as e:
+            return f"行业对比数据获取失败: {str(e)}"

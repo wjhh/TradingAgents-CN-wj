@@ -33,6 +33,7 @@ class ChinaDataSource(Enum):
     值使用统一的数据源编码
     """
     MONGODB = DataSourceCode.MONGODB  # MongoDB数据库缓存（最高优先级）
+    ASTOCK_DIRECT = DataSourceCode.ASTOCK_DIRECT  # A股直连数据（零第三方封装）
     TUSHARE = DataSourceCode.TUSHARE
     AKSHARE = DataSourceCode.AKSHARE
     BAOSTOCK = DataSourceCode.BAOSTOCK
@@ -136,6 +137,7 @@ class DataSourceManager:
 
                 # 转换为 ChinaDataSource 枚举（使用统一编码）
                 source_mapping = {
+                    DataSourceCode.ASTOCK_DIRECT: ChinaDataSource.ASTOCK_DIRECT,
                     DataSourceCode.TUSHARE: ChinaDataSource.TUSHARE,
                     DataSourceCode.AKSHARE: ChinaDataSource.AKSHARE,
                     DataSourceCode.BAOSTOCK: ChinaDataSource.BAOSTOCK,
@@ -161,8 +163,9 @@ class DataSourceManager:
             logger.warning(f"⚠️ [数据源优先级] 从数据库读取失败: {e}，使用默认顺序")
 
         # 🔥 回退到默认顺序（兼容性）
-        # 默认顺序：AKShare > Tushare > BaoStock
+        # 默认顺序：AStockDirect > AKShare > Tushare > BaoStock
         default_order = [
+            ChinaDataSource.ASTOCK_DIRECT,
             ChinaDataSource.AKSHARE,
             ChinaDataSource.TUSHARE,
             ChinaDataSource.BAOSTOCK,
@@ -209,17 +212,18 @@ class DataSourceManager:
         if self.use_mongodb_cache:
             return ChinaDataSource.MONGODB
 
-        # 从环境变量获取，默认使用AKShare作为第一优先级数据源
-        env_source = os.getenv('DEFAULT_CHINA_DATA_SOURCE', DataSourceCode.AKSHARE).lower()
+        # 从环境变量获取，默认使用ASTOCK_DIRECT作为第一优先级数据源
+        env_source = os.getenv('DEFAULT_CHINA_DATA_SOURCE', DataSourceCode.ASTOCK_DIRECT).lower()
 
         # 映射到枚举（使用统一编码）
         source_mapping = {
+            DataSourceCode.ASTOCK_DIRECT: ChinaDataSource.ASTOCK_DIRECT,
             DataSourceCode.TUSHARE: ChinaDataSource.TUSHARE,
             DataSourceCode.AKSHARE: ChinaDataSource.AKSHARE,
             DataSourceCode.BAOSTOCK: ChinaDataSource.BAOSTOCK,
         }
 
-        return source_mapping.get(env_source, ChinaDataSource.AKSHARE)
+        return source_mapping.get(env_source, ChinaDataSource.ASTOCK_DIRECT)
 
     # ==================== Tushare数据接口 ====================
 

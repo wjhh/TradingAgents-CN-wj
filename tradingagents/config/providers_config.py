@@ -50,7 +50,19 @@ class DataSourceConfig:
             "cache_enabled": self._get_bool_env("BAOSTOCK_CACHE_ENABLED", True),
             "cache_ttl": self._get_int_env("BAOSTOCK_CACHE_TTL", 1800),
         }
-        
+
+        # AStockDirect配置（A股直连数据，整合同花顺/东财/百度股市通/mootdx/腾讯）
+        self._configs["astock_direct"] = {
+            "enabled": self._get_bool_env("ASTOCK_DIRECT_ENABLED", True),
+            "timeout": self._get_int_env("ASTOCK_DIRECT_TIMEOUT", 30),
+            "rate_limit": self._get_float_env("ASTOCK_DIRECT_RATE_LIMIT", 0.15),
+            "max_retries": self._get_int_env("ASTOCK_DIRECT_MAX_RETRIES", 2),
+            "cache_enabled": self._get_bool_env("ASTOCK_DIRECT_CACHE_ENABLED", True),
+            "cache_ttl": self._get_int_env("ASTOCK_DIRECT_CACHE_TTL", 300),
+            "mootdx_host": os.getenv("MOOTDX_HOST", "119.147.212.81"),
+            "mootdx_port": self._get_int_env("MOOTDX_PORT", 7709),
+        }
+
         # Yahoo Finance配置
         self._configs["yahoo"] = {
             "enabled": self._get_bool_env("YAHOO_ENABLED", False),

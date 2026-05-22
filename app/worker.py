@@ -80,7 +80,7 @@ async def process_task(task_id: str) -> None:
         user_id = data.get("user", "")
 
         # Extract analysis parameters with defaults
-        analysts = params.get("analysts", ["Bull Analyst", "Bear Analyst", "Research Manager"])
+        analysts = params.get("analysts", ["market", "fundamentals", "news", "social"])
         research_depth = params.get("research_depth", 2)
         from tradingagents.llm_clients.provider_keys import normalize_provider_key
 

@@ -27,6 +27,14 @@ except ImportError:
     BaostockProvider = None
     BAOSTOCK_AVAILABLE = False
 
+# 导入 AStockDirect 提供器
+try:
+    from .astock_direct import AStockDirectProvider
+    ASTOCK_DIRECT_AVAILABLE = True
+except ImportError:
+    AStockDirectProvider = None
+    ASTOCK_DIRECT_AVAILABLE = False
+
 # 导入基本面快照工具
 try:
     from .fundamentals_snapshot import get_fundamentals_snapshot
@@ -42,6 +50,8 @@ __all__ = [
     'TUSHARE_AVAILABLE',
     'BaostockProvider',
     'BAOSTOCK_AVAILABLE',
+    'AStockDirectProvider',
+    'ASTOCK_DIRECT_AVAILABLE',
     'get_fundamentals_snapshot',
     'FUNDAMENTALS_SNAPSHOT_AVAILABLE',
 ]

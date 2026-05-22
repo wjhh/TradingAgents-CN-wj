@@ -19,11 +19,15 @@ _EXPORTS: Dict[str, Tuple[str, str]] = {
     "create_market_analyst": ("tradingagents.agents.analysts.market_analyst", "create_market_analyst"),
     "create_news_analyst": ("tradingagents.agents.analysts.news_analyst", "create_news_analyst"),
     "create_social_media_analyst": ("tradingagents.agents.analysts.social_media_analyst", "create_social_media_analyst"),
+    "create_policy_analyst": ("tradingagents.agents.analysts.policy_analyst", "create_policy_analyst"),
+    "create_hot_money_tracker": ("tradingagents.agents.analysts.hot_money_tracker", "create_hot_money_tracker"),
+    "create_lockup_watcher": ("tradingagents.agents.analysts.lockup_watcher", "create_lockup_watcher"),
     "create_risky_debator": ("tradingagents.agents.risk_mgmt.aggresive_debator", "create_risky_debator"),
     "create_safe_debator": ("tradingagents.agents.risk_mgmt.conservative_debator", "create_safe_debator"),
     "create_neutral_debator": ("tradingagents.agents.risk_mgmt.neutral_debator", "create_neutral_debator"),
     "create_risk_manager": ("tradingagents.agents.managers.risk_manager", "create_risk_manager"),
     "create_trader": ("tradingagents.agents.trader.trader", "create_trader"),
+    "create_quality_gate": ("tradingagents.agents.quality_gate", "create_quality_gate"),
 }
 
 __all__ = [
@@ -44,7 +48,11 @@ __all__ = [
     "create_risk_manager",
     "create_safe_debator",
     "create_social_media_analyst",
+    "create_policy_analyst",
+    "create_hot_money_tracker",
+    "create_lockup_watcher",
     "create_trader",
+    "create_quality_gate",
 ]
 
 

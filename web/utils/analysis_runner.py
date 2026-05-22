@@ -48,7 +48,10 @@ def translate_analyst_labels(text):
         'Research Manager:': '研究经理:',
         'Portfolio Manager:': '投资组合经理:',
         'Risk Judge:': '风险管理委员会:',
-        'Trader:': '交易员:'
+        'Trader:': '交易员:',
+        'Policy Analyst:': '政策分析师:',
+        'Hot_money Analyst:': '游资追踪师:',
+        'Lockup Analyst:': '解禁监控师:'
     }
 
     # 替换所有英文标签
@@ -712,6 +715,9 @@ def format_analysis_results(results):
         'fundamentals_report',
         'sentiment_report',
         'news_report',
+        'policy_report',        # 政策分析师报告 (A股专用)
+        'hot_money_report',     # 游资追踪师报告 (A股专用)
+        'lockup_report',        # 解禁监控师报告 (A股专用)
         'risk_assessment',
         'investment_plan',
         # 添加缺失的团队决策数据，确保与CLI端一致
@@ -808,7 +814,7 @@ def validate_analysis_params(stock_symbol, analysis_date, analysts, research_dep
     if not analysts or len(analysts) == 0:
         errors.append("必须至少选择一个分析师")
     
-    valid_analysts = ['market', 'social', 'news', 'fundamentals']
+    valid_analysts = ['market', 'social', 'news', 'fundamentals', 'policy', 'hot_money', 'lockup']
     invalid_analysts = [a for a in analysts if a not in valid_analysts]
     if invalid_analysts:
         errors.append(f"无效的分析师类型: {', '.join(invalid_analysts)}")

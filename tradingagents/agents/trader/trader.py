@@ -17,6 +17,9 @@ def create_trader(llm, memory):
         sentiment_report = state["sentiment_report"]
         news_report = state["news_report"]
         fundamentals_report = state["fundamentals_report"]
+        policy_report = state.get("policy_report", "")
+        hot_money_report = state.get("hot_money_report", "")
+        lockup_report = state.get("lockup_report", "")
 
         # 使用统一的股票类型检测
         from tradingagents.utils.stock_utils import StockUtils
@@ -36,7 +39,7 @@ def create_trader(llm, memory):
         logger.debug(f"💰 [DEBUG] 基本面报告长度: {len(fundamentals_report)}")
         logger.debug(f"💰 [DEBUG] 基本面报告前200字符: {fundamentals_report[:200]}...")
 
-        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
+        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}\n\n{policy_report}\n\n{hot_money_report}\n\n{lockup_report}"
 
         # 检查memory是否可用
         if memory is not None:
@@ -92,6 +95,7 @@ def create_trader(llm, memory):
 - 目标价位必须与当前股价的货币单位保持一致
 - 必须使用基本面报告中提供的正确公司名称
 - **绝对不允许说"无法确定目标价"或"需要更多信息"**
+{"- **A股特别约束：A股实行T+1交易制度（当日买入次日才能卖出），且有涨跌停板限制（主板±10%，科创板/创业板±20%），目标价位必须在合理范围内。**" if is_china else ""}
 
 请用中文撰写分析内容，并始终以'最终交易建议: **买入/持有/卖出**'结束您的回应以确认您的建议。
 

@@ -16,10 +16,13 @@ def create_research_manager(llm, memory):
         sentiment_report = state["sentiment_report"]
         news_report = state["news_report"]
         fundamentals_report = state["fundamentals_report"]
+        policy_report = state.get("policy_report", "")
+        hot_money_report = state.get("hot_money_report", "")
+        lockup_report = state.get("lockup_report", "")
 
         investment_debate_state = state["investment_debate_state"]
 
-        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
+        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}\n\n{policy_report}\n\n{hot_money_report}\n\n{lockup_report}"
 
         # 安全检查：确保memory不为None
         if memory is not None:
@@ -66,6 +69,12 @@ def create_research_manager(llm, memory):
 新闻分析：{news_report}
 
 基本面分析：{fundamentals_report}
+
+政策分析：{policy_report}
+
+游资追踪：{hot_money_report}
+
+解禁监控：{lockup_report}
 
 以下是辩论：
 辩论历史：
